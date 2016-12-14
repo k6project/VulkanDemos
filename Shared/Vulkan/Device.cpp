@@ -106,6 +106,20 @@ std::uint32_t VK::Device::GetNextSwapchaninImage() const
     return result;
 }
 
+VkShaderModule VK::Device::GetShaderModule(const std::string &name)
+{
+    auto pos = ShaderModules.find(name);
+    if (pos != ShaderModules.end())
+    {
+        return pos->second;
+    }
+    else
+    {
+        //Try to load module
+    }
+    return VK_NULL_HANDLE;
+}
+
 VkAttachmentDescription VK::Device::GetColorAttachmentDescription() const
 {
     VkAttachmentDescription result = {};

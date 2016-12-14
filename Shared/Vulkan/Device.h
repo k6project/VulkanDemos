@@ -34,6 +34,8 @@ namespace VK
 
         std::uint32_t GetNextSwapchaninImage() const;
 
+        VkShaderModule GetShaderModule(const std::string &name);
+
         VkAttachmentDescription GetColorAttachmentDescription() const;
 
         bool CreateCommandPool(int queueIndex, VkCommandPool &target);
@@ -74,6 +76,8 @@ namespace VK
         std::vector<VkImage> SwapchainImages;
 
         std::vector<VkImageView> SwapchainImageViews;
+
+        std::unordered_map<std::string, VkShaderModule> ShaderModules;
 
         VkSurfaceFormatKHR SwapchainSurfaceFormat;
 

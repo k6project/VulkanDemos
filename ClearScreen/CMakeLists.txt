@@ -35,4 +35,7 @@ include_directories(AFTER "$ENV{VULKAN_SDK}/Include/vulkan")
 
 set(SourceFiles ${SourceFiles} ${SharedSourceFiles})
 add_executable(ClearScreen WIN32 "${SourceFiles}")
-set_target_properties(ClearScreen PROPERTIES COMPILE_FLAGS "/YcGlobals.h")
+if(WIN32)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    set_target_properties(ClearScreen PROPERTIES COMPILE_FLAGS "/YcGlobals.h")
+endif(WIN32)

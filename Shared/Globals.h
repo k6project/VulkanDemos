@@ -2,7 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <cstdint>
+#include <unordered_map>
 
 #define VK_NO_PROTOTYPES
 #define VK_NONE 0xffffffffu
