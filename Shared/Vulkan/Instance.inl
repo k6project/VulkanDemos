@@ -1,0 +1,39 @@
+#ifndef VULKAN_DLL_EXPORT
+#define VULKAN_DLL_EXPORT(proc)
+#endif
+VULKAN_DLL_EXPORT(vkGetInstanceProcAddr)
+#undef VULKAN_DLL_EXPORT
+
+#ifndef VULKAN_API_GOBAL
+#define VULKAN_API_GOBAL(proc)
+#endif
+VULKAN_API_GOBAL(vkCreateInstance)
+VULKAN_API_GOBAL(vkEnumerateInstanceExtensionProperties)
+VULKAN_API_GOBAL(vkEnumerateInstanceLayerProperties)
+#undef VULKAN_API_GOBAL
+
+#ifndef VULKAN_API_INSTANCE
+#define VULKAN_API_INSTANCE(proc)
+#endif
+VULKAN_API_INSTANCE(vkDestroyInstance)
+VULKAN_API_INSTANCE(vkGetDeviceProcAddr)
+VULKAN_API_INSTANCE(vkEnumeratePhysicalDevices)
+VULKAN_API_INSTANCE(vkEnumerateDeviceExtensionProperties)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceProperties)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceFeatures)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceQueueFamilyProperties)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceSurfaceSupportKHR)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceSurfaceFormatsKHR)
+VULKAN_API_INSTANCE(vkGetPhysicalDeviceSurfacePresentModesKHR)
+#ifdef VK_DEBUG_ON
+VULKAN_API_INSTANCE(vkCreateDebugReportCallbackEXT)
+VULKAN_API_INSTANCE(vkDebugReportMessageEXT)
+VULKAN_API_INSTANCE(vkDestroyDebugReportCallbackEXT)
+#endif
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+VULKAN_API_INSTANCE(vkCreateWin32SurfaceKHR)
+#endif
+VULKAN_API_INSTANCE(vkDestroySurfaceKHR)
+VULKAN_API_INSTANCE(vkCreateDevice)
+#undef VULKAN_API_INSTANCE
