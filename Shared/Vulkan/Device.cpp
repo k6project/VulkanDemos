@@ -3,6 +3,7 @@
 #include "Device.h"
 #include "CommandProxy.h"
 
+#include <NativeFile.h>
 #include <algorithm>
 
 bool VK::Device::InitSwapchain(const SwapchainConfig &config)
@@ -115,7 +116,19 @@ VkShaderModule VK::Device::GetShaderModule(const std::string &name)
     }
     else
     {
-        //Try to load module
+        File nativeFile(name);
+        if (nativeFile.ReadWholeFile())
+        {
+            VkShaderModule result = VK_NULL_HANDLE;
+            VkShaderModuleCreateInfo createInfo = {};
+            createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            createInfo.pCode = reinterpret_cast<const std::uint32_t*>(nativeFile.GetData());
+            createInfo.codeSize = nativeFile.GetDataSize();
+            if (vkCreateShaderModule(Handle, &createInfo, nullptr, &result) == VK_SUCCESS)
+            {
+                return result;
+            }
+        }
     }
     return VK_NULL_HANDLE;
 }
@@ -318,6 +331,10 @@ void VK::Device::Destroy()
     vkDeviceWaitIdle(Handle);
     vkDestroySemaphore(Handle, GraphicsSemaphore, nullptr);
     vkDestroySemaphore(Handle, PresentSemaphore, nullptr);
+    for (auto &shaderModuleEntry : ShaderModules)
+    {
+        vkDestroyShaderModule(Handle, shaderModuleEntry.second, nullptr);
+    }
     for (VkImageView imageView : SwapchainImageViews)
     {
         vkDestroyImageView(Handle, imageView, nullptr);
