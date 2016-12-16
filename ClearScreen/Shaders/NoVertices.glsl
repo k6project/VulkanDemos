@@ -6,7 +6,7 @@
 #define VARYING in
 #endif
 
-layout (location = 0) VARYING vec4 vColor; 
+layout (location = 0) VARYING highp vec4 vColor; 
 
 #if defined(VERTEX)
 
@@ -16,8 +16,8 @@ const vec2 VERTICES[] = vec2[](
 );
 
 const vec3 COLORS[] = vec3[](
-    vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0,0), vec3(0.0, 1.0, 0.0),
-    vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0,0)
+    vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0)
 );
 
 void main() 
@@ -27,6 +27,8 @@ void main()
 }
 
 #elif defined(FRAGMENT)
+
+precision highp float;
 
 layout (location = 0) out vec4 outFragColor;
 

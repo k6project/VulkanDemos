@@ -20,7 +20,6 @@ LRESULT WINAPI WndProc(HWND _wnd, UINT _msg, WPARAM _w, LPARAM _l)
         app.Render(0.f);
         break;
     case WM_SIZE:
-        //SC::Renderer::Get()->ResizeView(LOWORD(_l), HIWORD(_l));
         break;
     case WM_CLOSE:
         PostQuitMessage(0);
