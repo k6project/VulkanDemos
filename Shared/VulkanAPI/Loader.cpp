@@ -1,6 +1,6 @@
 #include <Globals.h>
 
-#include <vulkan.h>
+#include <vulkan/vulkan.h>
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
 

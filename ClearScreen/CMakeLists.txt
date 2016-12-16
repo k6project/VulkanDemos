@@ -31,7 +31,9 @@ endforeach()
 
 include_directories(AFTER "${SourceDir}")
 include_directories(AFTER "${SharedSourceDir}")
-include_directories(AFTER "$ENV{VULKAN_SDK}/Include/vulkan")
+if(WIN32)
+include_directories(AFTER "$ENV{VULKAN_SDK}/Include/")
+endif(WIN32)
 
 set(SourceFiles ${SourceFiles} ${SharedSourceFiles})
 add_executable(ClearScreen WIN32 "${SourceFiles}")
