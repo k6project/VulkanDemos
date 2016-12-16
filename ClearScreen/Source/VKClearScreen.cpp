@@ -2,8 +2,8 @@
 
 #include "VKClearScreen.h"
 
-#include "Vulkan/Device.h"
-#include "Vulkan/CommandProxy.h"
+#include "VulkanAPI/Device.h"
+#include "VulkanAPI/CommandProxy.h"
 
 struct VKClearScreen::ImplDetails
 {

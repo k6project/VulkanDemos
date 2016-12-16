@@ -1,8 +1,8 @@
 #include <Globals.h>
 
-#include <Vulkan/Device.h>
-#include <Vulkan/Instance.h>
-#include <Vulkan/NativeWindow.h>
+#include <VulkanAPI/Device.h>
+#include <VulkanAPI/Instance.h>
+#include <VulkanAPI/NativeWindow.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
