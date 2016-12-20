@@ -2,8 +2,9 @@
 
 #include "Device.h"
 #include "CommandProxy.h"
+#include "Pipeline.h"
 
-#include <NativeFile.h>
+#include <Platform/NativeFile.h>
 #include <algorithm>
 
 bool VK::Device::InitSwapchain(const SwapchainConfig &config)
@@ -100,10 +101,29 @@ void VK::Device::GetViewportArea(VkRect2D &outRect) const
     outRect.extent = SwapchainImageExtent;
 }
 
-std::uint32_t VK::Device::GetNextSwapchaninImage() const
+VkViewport VK::Device::GetSwapchainViewport(std::uint32_t swapchainIndex /*= 0*/) const
 {
+    VkViewport result;
+    result.x = 0.f;
+    result.y = 0.f;
+    result.width = static_cast<float>(SwapchainImageExtent.width);
+    result.height = static_cast<float>(SwapchainImageExtent.height);
+    result.minDepth = 0.f;
+    result.maxDepth = 1.f;
+    return result;
+}
+
+VkRect2D VK::Device::GetSwapchainDefaultScissorRect(std::uint32_t swapchainIndex /*= 0*/) const
+{
+    VkRect2D result = { {0, 0}, SwapchainImageExtent };
+    return result;
+}
+
+std::uint32_t VK::Device::GetNextSwapchaninImage(VkSemaphore waitSemaphore, std::uint32_t swapchainIndex /*= 0*/) const
+{
+    //TODO: Add multiple swap chains support
     std::uint32_t result = VK_NONE;
-    vkAcquireNextImageKHR(Handle, Swapchain, VK_NONE, GraphicsSemaphore, VK_NULL_HANDLE, &result);
+    vkAcquireNextImageKHR(Handle, Swapchain, VK_NONE, waitSemaphore, VK_NULL_HANDLE, &result);
     return result;
 }
 
@@ -126,6 +146,7 @@ VkShaderModule VK::Device::GetShaderModule(const std::string &name)
             createInfo.codeSize = nativeFile.GetDataSize();
             if (vkCreateShaderModule(Handle, &createInfo, nullptr, &result) == VK_SUCCESS)
             {
+                ShaderModules.insert({ name, result });
                 return result;
             }
         }
@@ -154,6 +175,17 @@ bool VK::Device::CreateCommandPool(int queueIndex, VkCommandPool &target)
     createInfo.queueFamilyIndex = QueueFamilies[queueIndex];
     createInfo.flags = 0;
     return (vkCreateCommandPool(Handle, &createInfo, nullptr, &target) == VK_SUCCESS);
+}
+
+bool VK::Device::CreateSemaphores(std::vector<VkSemaphore> &target)
+{
+    VkSemaphoreCreateInfo semCreate = {};
+    semCreate.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    for (VkSemaphore &semaphore : target)
+    {
+        vkCreateSemaphore(Handle, &semCreate, nullptr, &semaphore);
+    }
+    return true;
 }
 
 bool VK::Device::CreateCommandBuffers(VkCommandPool pool, std::vector<VkCommandBuffer> &target)
@@ -245,6 +277,25 @@ bool VK::Device::CreateRenderPass(const std::vector<VkAttachmentDescription> &at
     return result;
 }
 
+bool VK::Device::CreateGraphicsPipeline(PipelineInfo &info, VkPipelineLayout &layout, VkPipeline &target)
+{
+    bool result = false;
+    info.UpdateReferences();
+    if (vkCreatePipelineLayout(Handle, &info.PipelineLayout, nullptr, &layout) == VK_SUCCESS)
+    {
+        info.CreateInfo.layout = layout;
+        if (vkCreateGraphicsPipelines(Handle, nullptr, 1, &info.CreateInfo, nullptr, &target) != VK_SUCCESS)
+        {
+            vkDestroyPipelineLayout(Handle, layout, nullptr);
+        }
+        else
+        {
+            result = true;
+        }
+    }
+    return result;
+}
+
 bool VK::Device::BeginCommandBuffer(VkCommandBuffer commandBuffer, CommandProxy &target)
 {
     VkCommandBufferBeginInfo beginInfo = {};
@@ -270,27 +321,22 @@ bool VK::Device::EndCommandBuffer(CommandProxy &proxy)
     return result;
 }
 
-void VK::Device::SubmitCommandBuffers(VkSubmitInfo &submitInfo, std::uint32_t imageIndex)
+bool VK::Device::SubmitCommands(const VkSubmitInfo *submitInfo, std::uint32_t count)
 {
-    VkPipelineStageFlags flags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    submitInfo.pWaitSemaphores = &GraphicsSemaphore;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitDstStageMask = flags;
-    submitInfo.pSignalSemaphores = &PresentSemaphore;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    if (vkQueueSubmit(Queues[GRAPHICS_QUEUE], 1, &submitInfo, VK_NULL_HANDLE) == VK_SUCCESS)
-    {
-        VkPresentInfoKHR presentInfo = {};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.pWaitSemaphores = &PresentSemaphore;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pSwapchains = &Swapchain;
-        presentInfo.swapchainCount = 1;
-        presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = nullptr;
-        vkQueuePresentKHR(Queues[PRESENT_QUEUE], &presentInfo);
-    }
+    return (vkQueueSubmit(Queues[GRAPHICS_QUEUE], count, submitInfo, VK_NULL_HANDLE) == VK_SUCCESS);
+}
+
+bool VK::Device::PresentFrame(VkSemaphore *waitSemaphores, std::uint32_t numSemaphores, std::uint32_t *images)
+{
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.pWaitSemaphores = waitSemaphores;
+    presentInfo.waitSemaphoreCount = numSemaphores;
+    presentInfo.pSwapchains = &Swapchain;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pImageIndices = images;
+    presentInfo.pResults = nullptr;
+    return (vkQueuePresentKHR(Queues[PRESENT_QUEUE], &presentInfo) == VK_SUCCESS);
 }
 
 void VK::Device::Destroy(std::vector<VkFramebuffer> &objects)
@@ -298,6 +344,24 @@ void VK::Device::Destroy(std::vector<VkFramebuffer> &objects)
     for (VkFramebuffer object : objects)
     {
         vkDestroyFramebuffer(Handle, object, nullptr);
+    }
+}
+
+void VK::Device::Destroy(VkPipelineLayout object)
+{
+    vkDestroyPipelineLayout(Handle, object, nullptr);
+}
+
+void VK::Device::Destroy(VkPipeline object)
+{
+    vkDestroyPipeline(Handle, object, nullptr);
+}
+
+void VK::Device::Destroy(std::vector<VkSemaphore> &objects)
+{
+    for (VkSemaphore object : objects)
+    {
+        vkDestroySemaphore(Handle, object, nullptr);
     }
 }
 

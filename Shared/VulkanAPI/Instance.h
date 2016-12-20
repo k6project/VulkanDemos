@@ -2,10 +2,10 @@
 
 #include <vulkan/vulkan.h>
 
+struct NativeWindow;
+
 namespace VK
 {
-
-    struct NativeWindow;
 
     struct DeviceRequest
     {

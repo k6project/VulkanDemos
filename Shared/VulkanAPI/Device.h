@@ -5,6 +5,8 @@
 namespace VK
 {
 
+    struct PipelineInfo;
+
     struct SwapchainConfig
     {
         VkSurfaceFormatKHR SurfaceFormat;
@@ -32,7 +34,11 @@ namespace VK
 
         void GetViewportArea(VkRect2D &outRect) const;
 
-        std::uint32_t GetNextSwapchaninImage() const;
+        VkViewport GetSwapchainViewport(std::uint32_t swapchainIndex = 0) const;
+
+        VkRect2D GetSwapchainDefaultScissorRect(std::uint32_t swapchainIndex = 0) const;
+
+        std::uint32_t GetNextSwapchaninImage(VkSemaphore waitSemaphore, std::uint32_t swapchainIndex = 0) const;
 
         VkShaderModule GetShaderModule(const std::string &name);
 
@@ -40,21 +46,33 @@ namespace VK
 
         bool CreateCommandPool(int queueIndex, VkCommandPool &target);
 
+        bool CreateSemaphores(std::vector<VkSemaphore> &target);
+
         bool CreateCommandBuffers(VkCommandPool pool, std::vector<VkCommandBuffer> &target);
 
         bool CreateFramebuffers(VkRenderPass renderPass, std::vector<VkFramebuffer> &target);
 
         bool CreateRenderPass(const std::vector<VkAttachmentDescription> &attachments, const std::uint32_t *subpassAttachments, VkRenderPass &target);
 
+        bool CreateGraphicsPipeline(PipelineInfo &info, VkPipelineLayout &layout, VkPipeline &target);
+
         bool BeginCommandBuffer(VkCommandBuffer commandBuffer, CommandProxy &target);
 
         bool EndCommandBuffer(CommandProxy &proxy);
 
-        void SubmitCommandBuffers(VkSubmitInfo &submitInfo, std::uint32_t imageIndex);
+        bool SubmitCommands(const VkSubmitInfo *submitInfo, std::uint32_t count = 1);
+
+        bool PresentFrame(VkSemaphore *waitSemaphores, std::uint32_t numSemaphores, std::uint32_t *images);
 
         void Destroy(std::vector<VkCommandBuffer> &objects, VkCommandPool pool);
+
+        void Destroy(std::vector<VkSemaphore> &objects);
         
         void Destroy(std::vector<VkFramebuffer> &objects);
+
+        void Destroy(VkPipelineLayout object);
+
+        void Destroy(VkPipeline object);
 
         void Destroy(VkRenderPass object);
 

@@ -1,8 +1,8 @@
 #include <Globals.h>
+#include <Platform/NativeWindow.h>
 
 #include "Instance.h"
 #include "Device.h"
-#include "NativeWindow.h"
 
 #include <set>
 #include <unordered_set>

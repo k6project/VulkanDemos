@@ -1,15 +1,11 @@
 #include <Globals.h>
-
 #include <VulkanAPI/Device.h>
 #include <VulkanAPI/Instance.h>
-#include <VulkanAPI/NativeWindow.h>
+#include <Platform/NativeWindow.h>
+#include <Platform/Application.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-
-#include "VKClearScreen.h"
-
-static VKClearScreen app;
 
 LRESULT WINAPI WndProc(HWND _wnd, UINT _msg, WPARAM _w, LPARAM _l)
 {
@@ -17,7 +13,7 @@ LRESULT WINAPI WndProc(HWND _wnd, UINT _msg, WPARAM _w, LPARAM _l)
     switch (_msg)
     {
     case WM_PAINT:
-        app.Render(0.f);
+        Application::NextFrame();
         break;
     case WM_SIZE:
         break;
@@ -31,7 +27,7 @@ LRESULT WINAPI WndProc(HWND _wnd, UINT _msg, WPARAM _w, LPARAM _l)
     return retVal;
 }
 
-bool CreateNativeWindow(VK::NativeWindow &window)
+bool CreateNativeWindow(NativeWindow &window)
 {
     WNDCLASS windowClass;
     windowClass.style = CS_OWNDC;
@@ -60,7 +56,7 @@ bool CreateNativeWindow(VK::NativeWindow &window)
     int cols = window.Bounds.right - window.Bounds.left;
     int left = (GetSystemMetrics(SM_CXSCREEN) - cols) >> 1;
     int top = (GetSystemMetrics(SM_CYSCREEN) - rows) >> 1;
-    window.Handle = CreateWindowA("VulkanDemo", "VkClearScreen", style, left, top, cols, rows, NULL, NULL, GetModuleHandle(NULL), NULL);
+    window.Handle = CreateWindowA("VulkanDemo", "", style, left, top, cols, rows, NULL, NULL, GetModuleHandle(NULL), NULL);
     if (!window.Handle)
     {
         return false;
@@ -69,7 +65,7 @@ bool CreateNativeWindow(VK::NativeWindow &window)
     return true;
 }
 
-void RunNativeEventLoop(VK::NativeWindow &window)
+void RunNativeEventLoop(NativeWindow &window)
 {
     window.KeepRunning = true;
     ShowWindow(window.Handle, SW_SHOWDEFAULT);
@@ -91,36 +87,14 @@ void RunNativeEventLoop(VK::NativeWindow &window)
 
 int WINAPI WinMain(HINSTANCE _inst, HINSTANCE _prev, LPSTR _cmd, int _show)
 {
-    VK::NativeWindow window;
-    VK::Instance vkInstance;
-    if (vkInstance.Init("VulkanDemo") && CreateNativeWindow(window))
+    NativeWindow nativeWindow;
+    if (CreateNativeWindow(nativeWindow))
     {
-        VK::Device vkDevice;
-        VkSurfaceKHR vkSurface;
-
-        if (vkInstance.CreateSurface(window, vkSurface))
+        if (InitApp(nativeWindow))
         {
-            VK::DeviceRequest devRequest;
-            devRequest.TargetSurface = vkSurface;
-            devRequest.QueueFlagBits = VK_QUEUE_GRAPHICS_BIT;
-            if (vkInstance.CreateDevice(devRequest, vkDevice))
-            {
-                VK::SwapchainConfig swapchainConf;
-                swapchainConf.Extent = window.Size;
-                swapchainConf.PresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-                swapchainConf.SurfaceFormat = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
-                if (vkDevice.InitSwapchain(swapchainConf))
-                {
-                    app.Init(vkDevice);
-                    RunNativeEventLoop(window);
-                    app.Shutdown();
-                }
-            }
+            RunNativeEventLoop(nativeWindow);
         }
-
-        vkDevice.Destroy();
-        vkInstance.Destroy(vkSurface);
+        Application::Shutdown();
     }
-    vkInstance.Destroy();
     return 0;
 }

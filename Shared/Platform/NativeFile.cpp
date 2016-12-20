@@ -20,6 +20,7 @@ bool File::ReadWholeFile()
         Buffer.resize(count, 0);
         fread(Buffer.data(), sizeof(char), count, fp);
         fclose(fp);
+        return true;
     }
     return false;
 }
