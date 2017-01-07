@@ -21,6 +21,12 @@ public:
 
     static void NextFrame();
 
+    static void StartRenderThread();
+
+    static bool IsRenderThreadRunning();
+
+    static void MoveInputPointerTo(int x, int y, std::uint32_t flags);
+
 protected:
 
     virtual bool Init(const NativeWindow &nativeWindow);
@@ -28,6 +34,8 @@ protected:
     virtual void RenderFrame();
 
     virtual void Destroy();
+
+    virtual void OnInputPointerMove(VkOffset2D delta, std::uint32_t flags);
 
     bool InitSemaphores(std::uint32_t count);
 
@@ -41,6 +49,14 @@ protected:
 
     VK::Device *VKDevice;
 
+    VkOffset2D InputPointer;
+
     friend bool InitApp(const NativeWindow &);
+
+private:
+
+    static std::thread RenderThread;
+
+    static bool Running;
 
 };

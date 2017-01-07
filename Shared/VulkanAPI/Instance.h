@@ -7,13 +7,7 @@ struct NativeWindow;
 namespace VK
 {
 
-    struct DeviceRequest
-    {
-        std::uint32_t QueueFlagBits = 0u;
-        VkSurfaceKHR TargetSurface = VK_NULL_HANDLE;
-        VkPhysicalDeviceFeatures Features = {};
-        std::vector<const char *> Extensions;
-    };
+    struct DeviceRequest;
 
     class Device;
 

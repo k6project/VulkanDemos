@@ -3,6 +3,7 @@
 
 #include "Instance.h"
 #include "Device.h"
+#include "DeviceRequest.h"
 
 #include <set>
 #include <unordered_set>
@@ -193,6 +194,17 @@ VK::Instance::DeviceMatch VK::Instance::MatchDevice(std::uint32_t index, const D
     {
         return result;
     }
+
+    /**/
+    VkPhysicalDevice phDevice = PhysicalDevices[index];
+    request.FindQueues(PhysicalDevicesInfo[index].QueueFamilies, [this, phDevice, &request](std::uint32_t i) 
+    {
+        VkBool32 canPresent = VK_FALSE;
+        vkGetPhysicalDeviceSurfaceSupportKHR(phDevice, i, request.TargetSurface, &canPresent);
+        return (canPresent == VK_TRUE);
+    });
+    /**/
+
     for (std::uint32_t i = 0; i < PhysicalDevicesInfo[index].QueueFamilies.size(); i++)
     {
         if ((request.QueueFlagBits & VK_QUEUE_GRAPHICS_BIT) && (graphicsQueueFamily == VK_NONE))

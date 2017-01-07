@@ -7,6 +7,14 @@
 #include <Windows.h>
 #endif
 
+#define MOUSE_MOVE_THRESHOLD 4
+
+enum : std::uint32_t
+{
+    LBUTTON_DOWN = 1,  
+    RBUTTON_DOWN = 2
+};
+
 struct NativeWindow
 {
 #ifdef _WIN32

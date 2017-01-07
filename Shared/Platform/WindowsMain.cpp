@@ -7,18 +7,28 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+static void OnMouseMoveEvent(WPARAM w, LPARAM l)
+{
+    std::uint32_t buttons = 0;
+    int x = LOWORD(l), y = HIWORD(l);
+    buttons |= (w & MK_LBUTTON) ? LBUTTON_DOWN : 0;
+    buttons |= (w & MK_RBUTTON) ? RBUTTON_DOWN : 0;
+    Application::MoveInputPointerTo(x, y, buttons);
+}
+
 LRESULT WINAPI WndProc(HWND _wnd, UINT _msg, WPARAM _w, LPARAM _l)
 {
     LRESULT retVal = 0;
     switch (_msg)
     {
-    case WM_PAINT:
-        Application::NextFrame();
-        break;
     case WM_SIZE:
         break;
     case WM_CLOSE:
         PostQuitMessage(0);
+        Application::Shutdown();
+        break;
+    case WM_MOUSEMOVE:
+        OnMouseMoveEvent(_w, _l);
         break;
     default:
         retVal = DefWindowProc(_wnd, _msg, _w, _l);
@@ -92,9 +102,9 @@ int WINAPI WinMain(HINSTANCE _inst, HINSTANCE _prev, LPSTR _cmd, int _show)
     {
         if (InitApp(nativeWindow))
         {
+            Application::StartRenderThread();
             RunNativeEventLoop(nativeWindow);
         }
-        Application::Shutdown();
     }
     return 0;
 }

@@ -16,6 +16,8 @@ namespace VK
 
     class Instance;
 
+    class Buffer;
+
     class CommandProxy;
 
     class Device
@@ -27,6 +29,8 @@ namespace VK
         {
             GRAPHICS_QUEUE,
             PRESENT_QUEUE,
+            //COMPUTE_QUEUE,
+            //TRANSFER_QUEUE,
             TOTAL_QUEUES
         };
 
@@ -69,6 +73,8 @@ namespace VK
         void Destroy(std::vector<VkSemaphore> &objects);
         
         void Destroy(std::vector<VkFramebuffer> &objects);
+
+        void Destroy(Buffer &object);
 
         void Destroy(VkPipelineLayout object);
 

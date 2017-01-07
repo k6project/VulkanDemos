@@ -1,6 +1,7 @@
 #include <Globals.h>
 
 #include "Device.h"
+#include "Buffer.h"
 #include "CommandProxy.h"
 #include "Pipeline.h"
 
@@ -344,6 +345,18 @@ void VK::Device::Destroy(std::vector<VkFramebuffer> &objects)
     for (VkFramebuffer object : objects)
     {
         vkDestroyFramebuffer(Handle, object, nullptr);
+    }
+}
+
+void VK::Device::Destroy(Buffer &object)
+{
+    if (object.Handle != VK_NULL_HANDLE)
+    {
+        vkDestroyBuffer(Handle, object.Handle, nullptr);
+    }
+    if (object.Memory != VK_NULL_HANDLE)
+    {
+        vkFreeMemory(Handle, object.Memory, nullptr);
     }
 }
 

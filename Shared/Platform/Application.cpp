@@ -4,14 +4,19 @@
 
 #include <VulkanAPI/Device.h>
 #include <VulkanAPI/Instance.h>
+#include <VulkanAPI/DeviceRequest.h>
 #include <Platform/NativeWindow.h>
 
 std::unique_ptr<Application> Application::AppInstance;
+std::thread Application::RenderThread;
+bool Application::Running = false;
 
 void Application::Shutdown()
 {
     if (AppInstance)
     {
+        Running = false;
+        RenderThread.join();
         AppInstance->Destroy();
         AppInstance.reset();
     }
@@ -25,8 +30,67 @@ void Application::NextFrame()
     }
 }
 
+void Application::StartRenderThread()
+{
+    Running = true;
+    std::thread newThread([]()
+    {
+        while (Application::IsRenderThreadRunning())
+        {
+            Application::NextFrame();
+        }
+    });
+    std::swap(RenderThread, newThread);
+}
+
+bool Application::IsRenderThreadRunning()
+{
+    return Running;
+}
+
+void Application::MoveInputPointerTo(int x, int y, std::uint32_t flags)
+{
+    if (AppInstance)
+    {
+        VkOffset2D newPos = { x, y };
+        VkOffset2D oldPos = AppInstance->InputPointer;
+        if (oldPos.x == -1 && oldPos.y == -1)
+        {
+            AppInstance->InputPointer = newPos;
+        }
+        else
+        {
+            bool change = false;
+            VkOffset2D delta = { (oldPos.x - x), (oldPos.y - y) };
+            if (abs(delta.x) > MOUSE_MOVE_THRESHOLD)
+            {
+                AppInstance->InputPointer.x = x;
+                change = true;
+            }
+            else
+            {
+                delta.x = 0;
+            }
+            if (abs(delta.y) > MOUSE_MOVE_THRESHOLD)
+            {
+                AppInstance->InputPointer.y = y;
+                change = true;
+            }
+            else
+            {
+                delta.y = 0;
+            }
+            if (change)
+            {
+                AppInstance->OnInputPointerMove(delta, flags);
+            }
+        }
+    }
+}
+
 bool Application::Init(const NativeWindow &nativeWindow)
 {
+    InputPointer = { -1, -1 };
     VKInstance = new VK::Instance;
     if (VKInstance->Init("VulkanDemo"))
     {
@@ -56,7 +120,7 @@ bool Application::Init(const NativeWindow &nativeWindow)
 
 void Application::RenderFrame()
 {
-
+    //By default does nothing, re-implement in subclasses
 }
 
 void Application::Destroy()
@@ -67,6 +131,11 @@ void Application::Destroy()
     VKInstance->Destroy();
     delete VKDevice;
     delete VKInstance;
+}
+
+void Application::OnInputPointerMove(VkOffset2D delta, std::uint32_t flags)
+{
+    //By default does nothing, re-implement in subclasses
 }
 
 bool Application::InitSemaphores(std::uint32_t count)
