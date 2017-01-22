@@ -18,6 +18,8 @@ namespace VK
 
         void BindGraphicsPipeline(VkPipeline pipeline);
 
+        void BindComputePipeline(VkPipeline pipeline);
+
         void Draw(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstVertex, std::uint32_t firstInstace);
 
     private:

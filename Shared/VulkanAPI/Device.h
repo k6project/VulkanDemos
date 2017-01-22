@@ -5,6 +5,8 @@
 namespace VK
 {
 
+    struct BufferRequest;
+
     struct PipelineInfo;
 
     struct SwapchainConfig
@@ -47,6 +49,8 @@ namespace VK
         VkShaderModule GetShaderModule(const std::string &name);
 
         VkAttachmentDescription GetColorAttachmentDescription() const;
+
+        bool CreateBuffer(const BufferRequest &request, Buffer &target);
 
         bool CreateCommandPool(int queueIndex, VkCommandPool &target);
 
@@ -103,6 +107,8 @@ namespace VK
 
         std::unordered_map<std::string, VkShaderModule> ShaderModules;
 
+        VkPhysicalDeviceMemoryProperties *MemoryProperties;
+
         VkSurfaceFormatKHR SwapchainSurfaceFormat;
 
         VkExtent2D SwapchainImageExtent;
@@ -114,10 +120,6 @@ namespace VK
         VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 
         VkQueue Queues[TOTAL_QUEUES];
-        
-        VkSemaphore GraphicsSemaphore;
-
-        VkSemaphore PresentSemaphore;
 
         VkSurfaceKHR Surface;
 
@@ -126,6 +128,8 @@ namespace VK
         friend class VK::Instance;
 
         friend class VK::CommandProxy;
+
+        friend class VK::Buffer;
 
     };
 

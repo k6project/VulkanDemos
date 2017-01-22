@@ -32,6 +32,7 @@ namespace VK
         {
             VkPhysicalDeviceProperties Properties;
             VkPhysicalDeviceFeatures Features;
+            VkPhysicalDeviceMemoryProperties MemoryProperties;
             std::vector<VkQueueFamilyProperties> QueueFamilies;
             std::vector<VkExtensionProperties> Extensions;
 

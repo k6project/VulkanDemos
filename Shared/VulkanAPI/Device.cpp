@@ -88,8 +88,6 @@ bool VK::Device::InitSwapchain(const SwapchainConfig &config)
             SwapchainImageExtent = imageExtent;
             VkSemaphoreCreateInfo semCreate = {};
             semCreate.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-            vkCreateSemaphore(Handle, &semCreate, nullptr, &GraphicsSemaphore);
-            vkCreateSemaphore(Handle, &semCreate, nullptr, &PresentSemaphore);
             return true;
         }
     }
@@ -130,6 +128,7 @@ std::uint32_t VK::Device::GetNextSwapchaninImage(VkSemaphore waitSemaphore, std:
 
 VkShaderModule VK::Device::GetShaderModule(const std::string &name)
 {
+    //if no entry, get one from pool
     auto pos = ShaderModules.find(name);
     if (pos != ShaderModules.end())
     {
@@ -167,6 +166,40 @@ VkAttachmentDescription VK::Device::GetColorAttachmentDescription() const
     result.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     result.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     return result;
+}
+
+bool VK::Device::CreateBuffer(const BufferRequest &request, Buffer &target)
+{
+    VkBufferCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    createInfo.size = request.Size;
+    createInfo.usage = request.Usage;
+    createInfo.sharingMode = (request.IsShared) ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+    if (vkCreateBuffer(Handle, &createInfo, nullptr, &target.Handle) == VK_SUCCESS)
+    {
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(Handle, target.Handle, &memRequirements);
+        for (std::uint32_t i = 0; i < MemoryProperties->memoryTypeCount; i++)
+        {
+            bool isAllowed = ((memRequirements.memoryTypeBits & (1 << i)) != 0);
+            bool isUsable = ((MemoryProperties->memoryTypes[i].propertyFlags & request.Access) == request.Access);
+            if (isAllowed && isUsable)
+            {
+                VkMemoryAllocateInfo allocInfo = {};
+                allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+                allocInfo.allocationSize = request.Size;
+                allocInfo.memoryTypeIndex = i;
+                if (vkAllocateMemory(Handle, &allocInfo, nullptr, &target.Memory) == VK_SUCCESS) 
+                {
+                    vkBindBufferMemory(Handle, target.Handle, target.Memory, 0); //0 is an offset - multiple buffers???
+                    target.TargetDevice = this;
+                    target.Size = request.Size;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 bool VK::Device::CreateCommandPool(int queueIndex, VkCommandPool &target)
@@ -406,8 +439,6 @@ void VK::Device::Destroy(std::vector<VkCommandBuffer> &objects, VkCommandPool po
 void VK::Device::Destroy()
 {
     vkDeviceWaitIdle(Handle);
-    vkDestroySemaphore(Handle, GraphicsSemaphore, nullptr);
-    vkDestroySemaphore(Handle, PresentSemaphore, nullptr);
     for (auto &shaderModuleEntry : ShaderModules)
     {
         vkDestroyShaderModule(Handle, shaderModuleEntry.second, nullptr);

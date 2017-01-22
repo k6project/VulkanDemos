@@ -146,6 +146,7 @@ bool VK::Instance::CreateDevice(const DeviceRequest &request, Device &device)
                     tmp = device.PresentModes.size() & 0xffffffffu;
                     vkGetPhysicalDeviceSurfacePresentModesKHR(PhysicalDevices[i], device.Surface, &tmp, device.PresentModes.data());
                 }
+                device.MemoryProperties = &PhysicalDevicesInfo[i].MemoryProperties;
                 result = result && device.InitQueue(Device::GRAPHICS_QUEUE, match.GraphicsQueueFamily);
                 result = result && device.InitQueue(Device::PRESENT_QUEUE, match.PresentQueueFamily);
                 break;
@@ -239,6 +240,7 @@ void VK::Instance::GetPhysicalDeviceInfo(std::uint32_t index)
     std::uint32_t count = 0;
     vkGetPhysicalDeviceProperties(PhysicalDevices[index], &PhysicalDevicesInfo[index].Properties);
     vkGetPhysicalDeviceFeatures(PhysicalDevices[index], &PhysicalDevicesInfo[index].Features);
+    vkGetPhysicalDeviceMemoryProperties(PhysicalDevices[index], &PhysicalDevicesInfo[index].MemoryProperties);
     vkGetPhysicalDeviceQueueFamilyProperties(PhysicalDevices[index], &count, nullptr);
     if (count > 0)
     {
